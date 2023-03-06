@@ -1,9 +1,8 @@
 //Inicialmente se crea un array de objetos donde cada objeto es un usuario
-//al que se le pedirá nombre, numdocumento y tipo de usuario (propiedades o atributos).
+//al que se le pedirá nombre, numnumdocumento y tipo de usuario (propiedades o atributos).
 
 //NOTA: habrá dos tipos de usuarios; el 1 es administrador y el 2 es cliente.
-
-let totalcajero = 0;
+let totalDineroEnCajero = 0;
 
 const misusuarios = [
   {
@@ -61,11 +60,9 @@ const dineroEnCajero = [
 //Ahora se crea una función flecha llamada inicioCajero
 const inicioCajero = () => {
   const numdocumento = prompt(
-    "Por favor ingrese en el recuadro su número de documento"
+    "Por favor ingrese en el recuadro su número de numdocumento"
   );
-  const contraseña = prompt(
-    "A continuación ingrese en el recuadro su contraseña"
-  );
+  const contraseña = prompt("A continuación ingrese por favor su contraseña");
   return {
     numdocumento,
     contraseña,
@@ -74,23 +71,23 @@ const inicioCajero = () => {
 
 const validateUser = () => {
   let usuarioIniciado = inicioCajero();
-
   //Buscamos al usuario iniciado en nuestro arrays de usuarios creados inicialmente
   //Ponemos .find al ser uno de los métodos en los arrays para
   //encontrar un valor del primer elemento del array que nos cumpla. (Diapos sesión 6)
+
   let userFound = misusuarios.find(
     (user) =>
-      //Comparo para que coincidan los datos pedidos con los ingresados
       user.numdocumento === usuarioIniciado.numdocumento &&
       user.contraseña === usuarioIniciado.contraseña
   );
 
   //Ahora empleando un while rectifico que si el usuario no existe, entonces debe
-  //volver a ejecutar la función de inicio del cajero y la búsqueda del usuario. 
+  //volver a ejecutar la función de inicio del cajero y la búsqueda del usuario.
+
   while (!userFound) {
     //Se le avisa al usuario que los datos ingresados están incorrectos
     alert("Los datos que ha ingresado son incorrectos");
-    // Y se le vuelven a pedir los datos al usuario
+    //y se le vuelven a pedir los datos al usuario
     usuarioIniciado = inicioCajero();
     userFound = misusuarios.find(
       (user) =>
@@ -105,89 +102,113 @@ const validateUser = () => {
 
 const depositarDinero = () => {
   alert("Vamos a depositar dinero");
-  let totalcajero = 0;
-  dineroEnCajero.forEach((billete) => { /*Empleamos un forEach para recorrer el array*/
-    const dineroIngresado = prompt(
+  let totalDineroEnCajero = 0;
+  dineroEnCajero.forEach((billete) => {
+    //Empleamos un forEach para recorrer el array
+    const cantidadDepositadaStr = prompt(
       `Por favor ingrese la cantidad de billetes de $${billete.valorbillete} mil a depositar`
     );
-    const cantidadDepositada = Number(dineroIngresado);
+    const cantidadDepositada = Number(cantidadDepositadaStr);
     billete.cantidad += cantidadDepositada;
     const sumavalorbillete = billete.valorbillete * billete.cantidad;
-    totalcajero += sumavalorbillete;
+    totalDineroEnCajero += sumavalorbillete;
     console.log(
       `Hay $${sumavalorbillete} en billetes de $${billete.valorbillete}`
     );
   });
-  //console.log("con el mensaje que quiero que lea el usuario y que envíe"; la suma anterior) ESTRUCTURA PARECIDA A PSEINT.
-  console.log(
-    "El total de dinero disponible en este cajero es: $",
-    totalcajero
-  );
-  return totalcajero;
+    //console.log("con el mensaje que quiero que lea el usuario y que envíe"; la suma anterior)
+    //ESTRUCTURA PARECIDA A PSEINT.
+  console.log("El total de dinero disponible en el cajero es $", totalDineroEnCajero);
+  return totalDineroEnCajero;
 };
 
-
-let usuario_validado = validateUser();
-
-while (usuario_validado.usuario === 1) {
-  totalcajero = depositarDinero();
-  usuario_validado = validateUser();
-  if (usuario_validado.usuario === 2) {
-    break;
+function retiroDeDinero(cajero, valorRetiro) {
+  let dineroDisponible = 0;
+  for (let i = 0; i < cajero.length; i++) {
+    dineroDisponible += cajero[i].valorbillete * cajero[i].cantidad;
   }
+
+  let dineroEntregado = [];
+  for (let i = 0; i < cajero.length; i++) {
+    let billetesEntregados = Math.min(
+      Math.floor(valorRetiro / cajero[i].valorbillete),
+      cajero[i].cantidad
+    );
+    dineroEntregado.push({
+      valorbillete: cajero[i].valorbillete,
+      cantidad: billetesEntregados,
+    });
+    valorRetiro -= billetesEntregados * cajero[i].valorbillete;
+  }
+
+  // Redondear al valor más cercano menor al solicitado
+  if (valorRetiro > 0) {
+    let ultimavalorbillete =
+      dineroEntregado[dineroEntregado.length - 1].valorbillete;
+    let montoFaltante = ultimavalorbillete - (valorRetiro % ultimavalorbillete);
+    if (montoFaltante < ultimavalorbillete) {
+      valorRetiro -= montoFaltante;
+      dineroEntregado[dineroEntregado.length - 1].cantidad -= Math.floor(
+        montoFaltante / ultimavalorbillete
+      );
+    }
+  }
+
+  let dineroRestante = 0;
+  let mensajeBilletesRestantes = "Cantidad restante de billetes:\n";
+  for (let i = 0; i < cajero.length; i++) {
+    let billetesRestantes = cajero[i].cantidad - dineroEntregado[i].cantidad;
+    dineroRestante += billetesRestantes * cajero[i].valorbillete;
+    mensajeBilletesRestantes +=
+      billetesRestantes + " billetes de $" + cajero[i].valorbillete + "\n";
+  }
+
+  let mensaje = "Dinero entregado:\n";
+  for (let i = 0; i < dineroEntregado.length; i++) {
+    mensaje +=
+      dineroEntregado[i].cantidad +
+      " billetes de $" +
+      dineroEntregado[i].valorbillete +
+      "\n";
+  }
+
+  alert(mensaje);
+  alert(mensajeBilletesRestantes);
+  alert("Dinero restante en el cajero: $" + dineroRestante);
+  return dineroEntregado;
 }
 
 const retirarDinero = () => {
-  const dineroARetirar = prompt(
-    "Ingrese la cantidad de dinero que desea retirar"
-  );
-  alert(`Recuerde que por el momento este cajero le puede entregar un monto de $${totalcajero} mil.`);
+  const dineroARetirar = prompt("Ingrese la cantidad a retirar");
+  alert(`Podemos entregar $${totalDineroEnCajero}`);
 
-  if (dineroARetirar > totalcajero) {
-    alert(
-      "Lo sentimos, por el momento este cajero no cuenta con los fondos suficientes para este retiro."
-    );
+  if (dineroARetirar > totalDineroEnCajero) {
+    alert("Lo sentimos, no tenemos suficiente dinero");
   } else {
-    alert("Entendido, ¡vamos a retirar!");
+    alert("Vamos a retirar");
+    retiro = retiroDeDinero(dineroEnCajero, dineroARetirar);
+  }
+
+  return retiro;
+};
+
+const funcionPrincipal = () => {
+  let usuario_validado = validateUser();
+
+  while (usuario_validado.usuario === 1) {
+    totalDineroEnCajero = depositarDinero();
+    usuario_validado = validateUser();
+    if (usuario_validado.usuario === 2) {
+      break;
+    }
+  }
+
+  if (usuario_validado.usuario === 2 && totalDineroEnCajero === 0) {
+    alert("Cajero en mantenimiento, vuelva pronto");
+    funcionPrincipal();
+  } else {
+    retiro = retirarDinero();
   }
 };
 
-if (usuario_validado.usuario === 2 && totalcajero === 0) {
-  alert(
-    "Este cajero se encuentra actualmente en mantenimiento, ¡vuelva pronto!"
-  );
-} else {
-  retirarDinero();
-}
-
-/*¡const retirarDinero = () => {
-    //1. Preguntamos al usuario la cantidad a reitar
-    //2. Esa cantidad hay que convertirla de string a número
-    //3. Calculamos el total de dinero en el cajero
-    //4. calculamos la diferencia entre el total de dinero en cajero y el valor a retirar para calcular el dinero que queda en la caja después de realizar el retiro
-    //5. Realizamos las validaciones correspondientes
-    //5.1 Si el dinero que queda en caja es menor a 0: "El cajero no tiene sufuciente dinero para darle al cliente"
-    //5.2 Si el dinero que queda en caja es igual a 0: el cajero le debe entregar al cliente todo el dinero disponible en caja
-    //5.3. Si el dinero que queda en caja es mayor a 0, pueden pasar dos cosas:
-    //5.3.1 Cuando en la caja existe suficiente sencillo para entregarle al cliente la cantidad total del retiro
-    //5.3.2 Cuando en la caja no hay sencillo.
-    //---------La misma lógica de la caja registradora--------------
-  };
-  
-  const transaccionesCajero = () => {
-    const usuarioEncontrado = validateUser();
-    //Si el usuario ingresado existe, procedemos a validar que tipo de usuario es.
-    if (usuarioEncontrado) {
-      if (usuarioEncontrado.tipoUsuario === 1) {
-        //Es administrador y debe depositar dinero
-        depositarDinero();
-      } else {
-        //Es cliente y debe retirar dinero
-        retirarDinero();
-      }
-    }
-  };*/
-
-//Se ejecuta la función de transacción del cajero
-
-//transaccionesCajero();
+funcionPrincipal();
